@@ -1,0 +1,126 @@
+%addpath(genpath(pwd));
+%import SLEP.*;
+%run(mexC);
+A = importdata('SAS saved as spss.csv');
+%save IC_SP.mat A;
+%load('IC_SP.mat');
+data_double = A.data;
+data_name = A.textdata(1,5:end);
+%var = char(data_name); 
+
+% to pre-process whole data set
+% to get missing ratios of all variables
+for i = 1:size(data_double,2)
+    zeros(1,i) = sum(isnan(data_double(:,i)))/size(data_double,1);
+end
+
+% to remove variables with 75% or more missing data and get new data set data_double_new with 1688 variables
+k = 1;
+for i = 1:size(data_double, 2)
+        if zeros(1,i) < 0.75
+            data_name_new(1, k) = data_name(1,i); % to get the subset of variable names without respondents name
+            data_double_new(:, k) = data_double(:,i);
+            %data_double_new(k).name = data_name(1, i);
+            %data_double_new(k).value = data_double(:,i);
+            k = k + 1;
+        end
+end
+
+% to impute missing data using the nearest neighbor method
+temp = transpose(data_double_new);
+temp_imputed = knnimpute(temp);
+data_imputed = transpose(temp_imputed);
+
+% to standardize the variables
+data_s = zscore(data_imputed);
+
+% to drop the last 6 columns(unknown meaning)
+data_s(:, 1683:end) = [];
+data_name_new(:, 1683:end) = [];
+
+% to subset data set by constructs
+for i = 1: length(data_name_new)
+    construct(i). name = data_name_new{1,i}(4:end);
+    construct(i). value = data_s(:,i);
+end
+
+% to sort the construct by names
+[unused, order] = sortrows(strvcat(construct(:).name));
+construct_sorted = construct(order); 
+
+k = 1;
+i = 1;
+j = 2;
+%subconstruct{1} = construct(1).value;
+%subconstruct_name{1} = construct(1).name;
+% for i = 1: length(data_name_new)
+%     for j = 1: length(data_name_new)
+%         if(strncmp(construct(i).name, construct(j).name, 5) == 1)
+%             subconstruct(k).name = construct(j).name;
+%             subconstruct(k).value = construct(j).value;
+%          end
+%         j = j + 1;
+%     end
+%     i = i +1;
+% end
+subconstruct(1).name = construct_sorted(1).name(1:5);
+subconstruct(1).value = construct_sorted(1).value;
+while(i <= length(data_name_new) && j <= length(data_name_new))
+    if(strncmp(construct_sorted(i).name, construct_sorted(j).name, 5) == 1)
+        subconstruct(k).name = construct_sorted(j).name(1:5);
+        subconstruct(k).value = [subconstruct(k).value, construct_sorted(j).value];
+    else
+        i = j;
+        k = k + 1;
+        subconstruct(k).name = construct_sorted(i).name(1:5);
+        subconstruct(k).value = construct_sorted(i).value;
+    end
+    j = j + 1;
+end
+
+% to conduct PCA using default arguments
+for i = 1: length(subconstruct)
+     [coeff{i},score{i},latent{i},tsquared{i},explained{i},mu{i}] = pca(subconstruct(i).value);
+end
+ 
+
+% PCA based on individual item level for whole data set
+% % to conduct PCA1-default parameters / method
+% [coeff_1,score_1,latent_1,tsquared_1,explained_1,mu_1] = pca(data_s);
+% latent_1 (:,2) =  cumsum(latent_1)/sum(latent_1); % add cumsum ratio of variance explained
+% 
+% % to conducy PCA2-Alternating Least Squares-much slower
+% [coeff_2,score_2,latent_2,tsquared_2,explained_2,mu_2] = pca(data_double_new, 'Algorithm','als');
+% latent_2(:,2) =  cumsum(latent_2)/sum(latent_2); % add cumsum ratio of variance explained
+% 
+% % to conduct PCA3-default parameters / method, not centered
+% [coeff_3,score_3,latent_3,tsquared_3,explained_3,mu_3] = pca(data_s, 'Centered','off');
+% latent_3 (:,2) =  cumsum(latent_3)/sum(latent_3); % add cumsum ratio of variance explained
+% 
+% % to conduct PCA4-default parameters / method, rows = all
+% [coeff_4,score_4,latent_4,tsquared_4,explained_4,mu_4] = pca(data_s, 'Rows','all');
+% latent_4 (:,2) =  cumsum(latent_4)/sum(latent_4); % add cumsum ratio of variance explained
+% 
+% % to conduct PCA5-default parameters / method, requires 286 PCs
+% [coeff_5,score_5,latent_5,tsquared_5,explained_5,mu_5] = pca(data_s, 'NumComponents',286);
+% latent_5(:,2) =  cumsum(latent_5)/sum(latent_5); % add cumsum ratio of variance explained
+% 
+% % to conduct PCA6-Eigenvalue Decomposition 
+% [coeff_6,score_6,latent_6,tsquared_6,explained_6,mu_6] = pca(data_s, 'Algorithm','eig');
+% latent_6(:,2) =  cumsum(latent_6)/sum(latent_6); % add cumsum ratio of variance explained
+% 
+% % to conduct PCA7-Economy = Off 
+% [coeff_7,score_7,latent_7,tsquared_7,explained_7,mu_7] = pca(data_s, 'Economy','Off');
+% latent_7(:,2) =  cumsum(latent_7)/sum(latent_7); % add cumsum ratio of variance explained
+
+% % try if PCA can handle vector variables
+% field = {'field1', 'field2','field3', 'field4','field5', 'field6'};
+% 
+% for i = 1:197
+%     new(i).value1 = data_s(i,1:5);
+%     new(i).value2 = data_s(i,6:10);
+%     new(i).value3 = data_s(i,11:15);
+%     new(i).value4 = data_s(i,16:20);
+%     new(i).value5 = data_s(i,21:25);
+%     new(i).value6 = data_s(i,26:30);
+%     end
