@@ -91,8 +91,8 @@ for i = 1: length(construct)
         innovation = construct(i).value;
     end
 end
-
-h_innovation = hist(innovation);
+hist(innovation);
+title('Frequency of Innovation(NRPSN10)');
 
 % to find column GRCPN02 and plot histogram
 for i = 1:length(construct)
@@ -100,7 +100,8 @@ for i = 1:length(construct)
         quality = construct(i).value;
     end
 end
-h_quality = hist(quality);
+hist(quality);
+title('Frequency of Quality(GRCPN02)');
 
 % to find column GRCPN05 and plot histogram
 for i = 1:length(construct)
@@ -108,7 +109,8 @@ for i = 1:length(construct)
         flexibility = construct(i).value;
     end
 end
-h_flexibility = hist(flexibility);
+hist(flexibility);
+title('Frequency of Flexibility(GRCPN05)');
 
 % to find column GRCPN04  and plot histogram
 for i = 1:length(construct)
@@ -116,7 +118,8 @@ for i = 1:length(construct)
         speed = construct(i).value;
     end
 end
-h_speed = hist(speed);
+hist(speed);
+title('Frequency of Speed(GRCPN04)');
 
 % to find column GRADN00 and GRADN03   and plot histogram of GRADN00 divided by GRADN03 
 for i = 1:length(construct)
@@ -129,8 +132,13 @@ for i = 1:length(construct)
         cost_denominator  = construct(i).value;
     end
 end
-cost = cost_numerator/cost_denominator;
-h_cost = hist(cost);
+
+for i = 1: length(cost_numerator)
+    cost(i) = cost_numerator(i)/cost_denominator(i);
+end
+
+hist(cost);
+title('Frequency of Cost(GRADN00/GRADN03)');
 
 
 % PCA based on individual item level for whole data set
