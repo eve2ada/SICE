@@ -1,3 +1,5 @@
+clear all;
+close all;
 %addpath(genpath(pwd));
 %import SLEP.*;
 %run(mexC);
@@ -82,7 +84,54 @@ end
 for i = 1: length(subconstruct)
      [coeff{i},score{i},latent{i},tsquared{i},explained{i},mu{i}] = pca(subconstruct(i).value);
 end
- 
+
+% to find column NRPSN10 and plot histogram
+for i = 1: length(construct)
+    if(construct(i).name == 'nrpsn10')
+        innovation = construct(i).value;
+    end
+end
+
+h_innovation = hist(innovation);
+
+% to find column GRCPN02 and plot histogram
+for i = 1:length(construct)
+    if(construct(i).name == 'grcpn02')
+        quality = construct(i).value;
+    end
+end
+h_quality = hist(quality);
+
+% to find column GRCPN05 and plot histogram
+for i = 1:length(construct)
+    if(construct(i).name == 'grcpn05')
+        flexibility = construct(i).value;
+    end
+end
+h_flexibility = hist(flexibility);
+
+% to find column GRCPN04  and plot histogram
+for i = 1:length(construct)
+    if(construct(i).name == 'grcpn04')
+        speed = construct(i).value;
+    end
+end
+h_speed = hist(speed);
+
+% to find column GRADN00 and GRADN03   and plot histogram of GRADN00 divided by GRADN03 
+for i = 1:length(construct)
+    if(construct(i).name == 'gradn00')
+        cost_numerator = construct(i).value;
+    end
+end
+for i = 1:length(construct)
+    if(construct(i).name == 'gradn03')
+        cost_denominator  = construct(i).value;
+    end
+end
+cost = cost_numerator/cost_denominator;
+h_cost = hist(cost);
+
 
 % PCA based on individual item level for whole data set
 % % to conduct PCA1-default parameters / method
