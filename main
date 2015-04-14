@@ -91,8 +91,6 @@ for i = 1: length(construct)
         innovation = construct(i).value;
     end
 end
-hist(innovation);
-title('Frequency of Innovation(NRPSN10)');
 
 % to find column GRCPN02 and plot histogram
 for i = 1:length(construct)
@@ -100,8 +98,6 @@ for i = 1:length(construct)
         quality = construct(i).value;
     end
 end
-hist(quality);
-title('Frequency of Quality(GRCPN02)');
 
 % to find column GRCPN05 and plot histogram
 for i = 1:length(construct)
@@ -109,8 +105,7 @@ for i = 1:length(construct)
         flexibility = construct(i).value;
     end
 end
-hist(flexibility);
-title('Frequency of Flexibility(GRCPN05)');
+
 
 % to find column GRCPN04  and plot histogram
 for i = 1:length(construct)
@@ -118,8 +113,7 @@ for i = 1:length(construct)
         speed = construct(i).value;
     end
 end
-hist(speed);
-title('Frequency of Speed(GRCPN04)');
+
 
 % to find column GRADN00 and GRADN03   and plot histogram of GRADN00 divided by GRADN03 
 for i = 1:length(construct)
@@ -137,6 +131,20 @@ for i = 1: length(cost_numerator)
     cost(i) = cost_numerator(i)/cost_denominator(i);
 end
 
+figure % create new figure
+subplot(3,2,1) % first subplot
+hist(innovation);
+title('Frequency of Innovation(NRPSN10)');
+subplot(3,2,2) % second subplot
+hist(quality);
+title('Frequency of Quality(GRCPN02)');
+subplot(3,2,3) % third subplot
+hist(flexibility);
+title('Frequency of Flexibility(GRCPN05)');
+subplot(3,2,4) % fourth subplot
+hist(speed);
+title('Frequency of Speed(GRCPN04)');
+subplot(3,2,5) % fifth subplot
 hist(cost);
 title('Frequency of Cost(GRADN00/GRADN03)');
 
