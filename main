@@ -38,12 +38,19 @@ data_s = zscore(data_imputed);
 
 % to drop the last 6 columns(unknown meaning)
 data_s(:, 1683:end) = [];
+data_imputed(:, 1683:end) = []; % un-standardized data
 data_name_new(:, 1683:end) = [];
 
-% to subset data set by constructs
+% to subset data set by constructs-standardized
 for i = 1: length(data_name_new)
     construct(i). name = data_name_new{1,i}(4:end);
     construct(i). value = data_s(:,i);
+end
+
+% to subset data set by constructs-unstandardized
+for i = 1: length(data_name_new)
+    construct_us(i). name = data_name_new{1,i}(4:end);
+    construct_us(i). value = data_imputed(:,i);
 end
 
 % to sort the construct by names
@@ -86,50 +93,62 @@ for i = 1: length(subconstruct)
 end
 
 % to find column NRPSN10 and plot histogram
-for i = 1: length(construct)
-    if(construct(i).name == 'nrpsn10')
-        innovation = construct(i).value;
+for i = 1: length(construct_us)
+    if(construct_us(i).name == 'nrpsn10')
+        innovation = construct_us(i).value;
     end
 end
 
 % to find column GRCPN02 and plot histogram
-for i = 1:length(construct)
-    if(construct(i).name == 'grcpn02')
-        quality = construct(i).value;
+for i = 1:length(construct_us)
+    if(construct_us(i).name == 'grcpn02')
+        quality = construct_us(i).value;
     end
 end
 
 % to find column GRCPN05 and plot histogram
-for i = 1:length(construct)
-    if(construct(i).name == 'grcpn05')
-        flexibility = construct(i).value;
+for i = 1:length(construct_us)
+    if(construct_us(i).name == 'grcpn05')
+        flexibility = construct_us(i).value;
     end
 end
-
 
 % to find column GRCPN04  and plot histogram
-for i = 1:length(construct)
-    if(construct(i).name == 'grcpn04')
-        speed = construct(i).value;
+for i = 1:length(construct_us)
+    if(construct_us(i).name == 'grcpn04')
+        speed = construct_us(i).value;
     end
 end
-
 
 % to find column GRADN00 and GRADN03   and plot histogram of GRADN00 divided by GRADN03 
-for i = 1:length(construct)
-    if(construct(i).name == 'gradn00')
-        cost_numerator = construct(i).value;
+for i = 1:length(construct_us)
+    if(construct_us(i).name == 'gradn00')
+        cost_numerator = construct_us(i).value;
     end
 end
-for i = 1:length(construct)
-    if(construct(i).name == 'gradn03')
-        cost_denominator  = construct(i).value;
+for i = 1:length(construct_us)
+    if(construct_us(i).name == 'gradn03')
+        cost_denominator  = construct_us(i).value;
     end
 end
 
 for i = 1: length(cost_numerator)
     cost(i) = cost_numerator(i)/cost_denominator(i);
 end
+
+% to exclude the outlier(s)
+k = 1;
+for i = 1:length(cost_numerator)
+    if(cost(i) <=20)
+    cost_noutlier(k) = cost(i);
+    k = k +1;
+    end
+end
+
+
+% for i = 1:length(cost)
+%     cost_s(i)=(cost(i)-mean(cost))/std(cost);
+% end
 
 figure % create new figure
 subplot(3,2,1) % first subplot
@@ -145,7 +164,7 @@ subplot(3,2,4) % fourth subplot
 hist(speed);
 title('Frequency of Speed(GRCPN04)');
 subplot(3,2,5) % fifth subplot
-hist(cost);
+hist(cost_noutlier);
 title('Frequency of Cost(GRADN00/GRADN03)');
 
 
