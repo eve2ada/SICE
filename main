@@ -74,9 +74,10 @@ j = 2;
 % end
 subconstruct(1).name = construct_sorted(1).name(1:5);
 subconstruct(1).value = construct_sorted(1).value;
+% group data set into constructs by 4th~7th characters in varable names 
 while(i <= length(data_name_new) && j <= length(data_name_new))
-    if(strncmp(construct_sorted(i).name, construct_sorted(j).name, 5) == 1)
-        subconstruct(k).name = construct_sorted(j).name(1:5);
+    if(strncmp(construct_sorted(i).name, construct_sorted(j).name, 4) == 1)
+        subconstruct(k).name = construct_sorted(j).name(1:4);
         subconstruct(k).value = [subconstruct(k).value, construct_sorted(j).value];
     else
         i = j;
