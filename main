@@ -1,8 +1,8 @@
 clear all;
 close all;
-%addpath(genpath(pwd));
-%import SLEP.*;
-%run(mexC);
+addpath(genpath(pwd));
+import SLEP.*;
+%run(mexC.m);
 A = importdata('SAS saved as spss.csv');
 %save IC_SP.mat A;
 %load('IC_SP.mat');
@@ -94,21 +94,26 @@ for i = 1: length(subconstruct)
 end
 
 % for innovation dimension
-% to find column NRPSN10 and plot histogram
+% to find column NRPSN10 and plot histogram(here un-standardized data are used, same to other categories)
 for i = 1: length(construct_us)
     if(construct_us(i).name == 'nrpsn10')
         innovation = construct_us(i).value;
     end
 end
-% to group all records to high and low innovation categories (median)
+% to group all records to high and low innovation categories (median, using standardized data,same to other categories)
 m = 1;
 n = 1;
 for i = 1: length(innovation)
     if (innovation(i) >= median(innovation))
-        innovation_high(m) = innovation(i);
+        %innovation_high(1,i) = construct_us(i).name;
+        for j = 1:length(construct)
+           innovation_high(m,j) = construct(j).value(i);
+        end
         m = m + 1;
     else
-        innovation_low(n) = innovation(i);
+        for j = 1:length(construct)
+             innovation_low(n,j) = construct(j).value(i);
+        end
         n = n + 1;
     end
 end      
@@ -125,10 +130,14 @@ m = 1;
 n = 1;
 for i = 1: length(quality)
     if (quality(i) >= median(quality))
-        quality_high(m) = quality(i);
+       for j = 1:length(construct)
+           quality_high(m,j) = construct(j).value(i);
+        end
         m = m + 1;
     else
-        quality_low(n) = quality(i);
+        for j = 1:length(construct)
+             quality_low(n,j) = construct(j).value(i);
+        end
         n = n + 1;
     end
 end      
@@ -143,15 +152,19 @@ end
 % to group all records to high and low flexibility categories (median)
 m = 1;
 n = 1;
-for i = 1: length(flexibility)
+for i = 1: length(quality)
     if (flexibility(i) >= median(flexibility))
-        flexibility_high(m) = flexibility(i);
+       for j = 1:length(construct)
+           flexibility_high(m,j) = construct(j).value(i);
+        end
         m = m + 1;
     else
-        flexibility_low(n) = flexibility(i);
+        for j = 1:length(construct)
+             flexibility_low(n,j) = construct(j).value(i);
+        end
         n = n + 1;
     end
-end      
+end       
 
 % for speed dimension
 % to find column GRCPN04  and plot histogram
@@ -165,13 +178,17 @@ m = 1;
 n = 1;
 for i = 1: length(speed)
     if (speed(i) >= median(speed))
-        speed_high(m) = speed(i);
+       for j = 1:length(construct)
+           speed_high(m,j) = construct(j).value(i);
+        end
         m = m + 1;
     else
-        speed_low(n) = speed(i);
+        for j = 1:length(construct)
+             speed_low(n,j) = construct(j).value(i);
+        end
         n = n + 1;
     end
-end      
+end       
 
 % for cost dimension
 % to find column GRADN00 and GRADN03   and plot histogram of GRADN00 divided by GRADN03 
@@ -197,40 +214,125 @@ for i = 1:length(cost_numerator)
     k = k +1;
     end
 end
-% to group all records to high and low speed categories (median)
+% to group all records to high and low cost categories (median)
 m = 1;
 n = 1;
-for i = 1: length( cost_noutlier)
+for i = 1: length(cost_noutlier)
     if (cost_noutlier(i) >= median( cost_noutlier))
-         cost_noutlier_high(m) =  cost_noutlier(i);
+         for j = 1:length(construct)
+                cost_noutlier_high(m,j) =  construct(j).value(i);
+         end
         m = m + 1;
     else
-        cost_noutlier_low(n) =  cost_noutlier(i);
+        for j = 1:length(construct)
+             cost_noutlier_low(n,j) =  construct(j).value(i);
+        end
         n = n + 1;
     end
 end      
+
 
 % for i = 1:length(cost)
 %     cost_s(i)=(cost(i)-mean(cost))/std(cost);
 % end
 
-figure % create new figure
-subplot(3,2,1) % first subplot
-hist(innovation);
-title('Frequency of Innovation(NRPSN10)');
-subplot(3,2,2) % second subplot
-hist(quality);
-title('Frequency of Quality(GRCPN02)');
-subplot(3,2,3) % third subplot
-hist(flexibility);
-title('Frequency of Flexibility(GRCPN05)');
-subplot(3,2,4) % fourth subplot
-hist(speed);
-title('Frequency of Speed(GRCPN04)');
-subplot(3,2,5) % fifth subplot
-hist(cost_noutlier);
-title('Frequency of Cost(GRADN00/GRADN03)');
+% to plot histograms for criteria variables to determine cut-off values
+% figure % create new figure
+% subplot(3,2,1) % first subplot
+% hist(innovation);
+% title('Frequency of Innovation(NRPSN10)');
+% subplot(3,2,2) % second subplot
+% hist(quality);
+% title('Frequency of Quality(GRCPN02)');
+% subplot(3,2,3) % third subplot
+% hist(flexibility);
+% title('Frequency of Flexibility(GRCPN05)');
+% subplot(3,2,4) % fourth subplot
+% hist(speed);
+% title('Frequency of Speed(GRCPN04)');
+% subplot(3,2,5) % fifth subplot
+% hist(cost_noutlier);
+% title('Frequency of Cost(GRADN00/GRADN03)');
 
+% SICE analysis
+% to get covariance matrix of 10 subsets
+cov_innovation_high = cov(innovation_high);
+cov_innovation_low = cov(innovation_low);
+
+cov_quality_high = cov(quality_high);
+cov_quality_low = cov(quality_low);
+
+cov_flexibility_high = cov(flexibility_high);
+cov_flexibility_low = cov(flexibility_low);
+
+cov_speed_high = cov(speed_high);
+cov_speed_low = cov(speed_low);
+
+cov_cost_high = cov(cost_noutlier_high);
+cov_cost_low = cov(cost_noutlier_low);
+
+time0 = datestr(now);
+SICE_innovation_high  = sparseInverseCovariance(cov_innovation_high, 0.567, []);
+time1= datestr(now);
+SICE_innovation_low  = sparseInverseCovariance(cov_innovation_low, 0.567, []);
+time2 = datestr(now);
+SICE_quality_high  = sparseInverseCovariance(cov_quality_high, 0.567, []);
+time3 = datestr(now);
+SICE_quality_low  = sparseInverseCovariance(cov_quality_low, 0.567, []);
+time4 = datestr(now);
+SICE_flexibility_high  = sparseInverseCovariance(cov_flexibility_high, 0.567, []);
+time5 = datestr(now);
+SICE_flexibility_low  = sparseInverseCovariance(cov_flexibility_low, 0.567, []);
+time6 = datestr(now);
+SICE_speed_high  = sparseInverseCovariance(cov_speed_high, 0.567, []);
+time7 = datestr(now);
+SICE_speed_low  = sparseInverseCovariance(cov_speed_low, 0.567, []);
+time8 = datestr(now);
+SICE_cost_high  = sparseInverseCovariance(cov_cost_high, 0.567, []);
+time9 = datestr(now);
+SICE_cost_low  = sparseInverseCovariance(cov_cost_low, 0.567, []);
+time10 = datestr(now);
+
+% illustrate of SICE outcome
+figure;
+subplot(1,2,1);
+spy(SICE_innovation_high);
+title('Estimated Sparse Inverse Covariance Matrix of High-Innovation Records');
+subplot(1,2,2);
+spy(SICE_innovation_low);
+title('Estimated Sparse Inverse Covariance Matrix of Low-Innovation Records');
+
+figure;
+subplot(1,2,1);
+spy(SICE_quality_high);
+title('Estimated Sparse Inverse Covariance Matrix of High-Quality Records');
+subplot(1,2,2);
+spy(SICE_quality_low);
+title('Estimated Sparse Inverse Covariance Matrix of Low-Quality Records');
+
+figure;
+subplot(1,2,1);
+spy(SICE_flexibility_high);
+title('Estimated Sparse Inverse Covariance Matrix of High-Flexibility Records');
+subplot(1,2,2);
+spy(SICE_flexibility_low);
+title('Estimated Sparse Inverse Covariance Matrix of Low-Flexibility Records');
+
+figure;
+subplot(1,2,1);
+spy(SICE_speed_high);
+title('Estimated Sparse Inverse Covariance Matrix of High-Speed Records');
+subplot(1,2,2);
+spy(SICE_speed_low);
+title('Estimated Sparse Inverse Covariance Matrix of Low-Speed Records');
+
+figure;
+subplot(1,2,1);
+spy(SICE_cost_high);
+title('Estimated Sparse Inverse Covariance Matrix of High-Cost Records');
+subplot(1,2,2);
+spy(SICE_cost_low);
+title('Estimated Sparse Inverse Covariance Matrix of Low-Cost Records');
 
 % PCA based on individual item level for whole data set
 % % to conduct PCA1-default parameters / method
