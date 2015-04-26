@@ -334,6 +334,9 @@ subplot(1,2,2);
 spy(SICE_cost_low);
 title('Estimated Sparse Inverse Covariance Matrix of Low-Cost Records');
 
+BGobj = biograph(SICE_innovation_high);
+view(BGobj);
+
 % PCA based on individual item level for whole data set
 % % to conduct PCA1-default parameters / method
 % [coeff_1,score_1,latent_1,tsquared_1,explained_1,mu_1] = pca(data_s);
