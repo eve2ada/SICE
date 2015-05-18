@@ -2,7 +2,7 @@ clear all;
 close all;
 addpath(genpath(pwd));
 import SLEP.*;
-%run(mexC.m);
+run mexC.m;
 A = importdata('SAS saved as spss.csv');
 %save IC_SP.mat A;
 %load('IC_SP.mat');
@@ -88,10 +88,16 @@ while(i <= length(data_name_new) && j <= length(data_name_new))
     j = j + 1;
 end
 
+%*********************************
 % to conduct PCA using default arguments
+%*********************************
 for i = 1: length(subconstruct)
      [coeff{i},score{i},latent{i},tsquared{i},explained{i},mu{i}] = pca(subconstruct(i).value);
 end
+
+%*************************************
+%plot criteron variables to determin cutoff values
+%*************************************
 
 % for innovation dimension
 % to find column NRPSN10 and plot histogram(here un-standardized data are used, same to other categories)
@@ -236,7 +242,7 @@ end
 %     cost_s(i)=(cost(i)-mean(cost))/std(cost);
 % end
 
-% to plot histograms for criteria variables to determine cut-off values
+% plot histograms for criteria variables
 % figure % create new figure
 % subplot(3,2,1) % first subplot
 % hist(innovation);
@@ -254,7 +260,10 @@ end
 % hist(cost_noutlier);
 % title('Frequency of Cost(GRADN00/GRADN03)');
 
-% SICE analysis
+%***************************************
+% SICE analysis based on original variables
+%***************************************
+
 % to get covariance matrix of 10 subsets
 cov_innovation_high = cov(innovation_high);
 cov_innovation_low = cov(innovation_low);
@@ -271,7 +280,8 @@ cov_speed_low = cov(speed_low);
 cov_cost_high = cov(cost_noutlier_high);
 cov_cost_low = cov(cost_noutlier_low);
 
-time0 = datestr(now);
+% to get SICE outcome 
+time0 = datestr(now); % to record running duration
 SICE_innovation_high  = sparseInverseCovariance(cov_innovation_high, 0.567, []);
 time1= datestr(now);
 SICE_innovation_low  = sparseInverseCovariance(cov_innovation_low, 0.567, []);
@@ -334,8 +344,233 @@ subplot(1,2,2);
 spy(SICE_cost_low);
 title('Estimated Sparse Inverse Covariance Matrix of Low-Cost Records');
 
-BGobj = biograph(SICE_innovation_high);
-view(BGobj);
+% to create network of SICE outcome
+BGobj_innovation_high = biograph(SICE_innovation_high);
+BGobj_innovation_low = biograph(SICE_innovation_high);
+BGobj_quality_high = biograph(SICE_quality_high);
+BGobj_quality_low = biograph(SICE_quality_low);
+BGobj_flexibility_high = biograph(SICE_flexibility_high);
+BGobj_flexibility_low = biograph(SICE_flexibility_low);
+BGobj_speed_high = biograph(SICE_speed_high);
+BGobj_speed_low = biograph(SICE_speed_low);
+BGobj_cost_high = biograph(SICE_cost_high);
+BGobj_cost_low = biograph(SICE_cost_low);
+
+% to view network of SICE outcome
+%view(BGobj_innovation_high);
+%view(BGobj_innovation_low);
+%view(BGobj_quality_high);
+%view(BGobj_quality_low);
+%view(BGobj_flexibility_high);
+%view(BGobj_flexibility_low);
+%view(BGobj_speed_high);
+%view(BGobj_speed_low);
+%view(BGobj_cost_high);
+%view(BGobj_cost_low);
+
+%********************************************************
+% SICE analysis based on principal components (first PC of each construct)
+%********************************************************
+
+% to get all the first PCs of 125 constructs and form a new dataset pcadata
+for i = 1: length(score)
+    pcadata(:,i) =score{1,i}(:,1);
+end
+
+% to get covariance matrix of 10 subsets
+cov_pcadata = cov(pcadata);
+% to get SICE outcome 
+SICE_pcadata  = sparseInverseCovariance(cov_pcadata, 0.567, []);
+% to illustrate SICE outcome 
+spy(SICE_pcadata);
+
+%*************************************************
+%to figure out the most strong relation between original variables
+%innovation, quality, flexibility, speed, cost
+%*************************************************
+
+% to extract maximal values (need to exclude values on diagonals) in SICE outcome
+% first extract non-zero values (as a column vector) from SICE outcome
+for i = 1: length(SICE_innovation_high)
+    for j = 1: length(SICE_innovation_high)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_innovation_high_zerodiagonal(i,j) = SICE_innovation_high(i,j);
+        else
+            SICE_innovation_high_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_innovation_high = nonzeros(SICE_innovation_high_zerodiagonal);
+
+for i = 1: length(SICE_innovation_low)
+    for j = 1: length(SICE_innovation_low)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_innovation_low_zerodiagonal(i,j) = SICE_innovation_low(i,j);
+        else
+            SICE_innovation_low_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_innovation_low = nonzeros(SICE_innovation_low_zerodiagonal);
+
+for i = 1: length(SICE_quality_high)
+    for j = 1: length(SICE_quality_high)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_quality_high_zerodiagonal(i,j) = SICE_quality_high(i,j);
+        else
+            SICE_quality_high_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_quality_high = nonzeros(SICE_quality_high_zerodiagonal);
+
+for i = 1: length(SICE_quality_low)
+    for j = 1: length(SICE_quality_low)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_quality_low_zerodiagonal(i,j) = SICE_quality_low(i,j);
+        else
+            SICE_quality_low_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_quality_low = nonzeros(SICE_quality_low_zerodiagonal);
+
+for i = 1: length(SICE_flexibility_high)
+    for j = 1: length(SICE_flexibility_high)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_flexibility_high_zerodiagonal(i,j) = SICE_flexibility_high(i,j);
+        else
+            SICE_flexibility_high_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_flexibility_high = nonzeros(SICE_flexibility_high_zerodiagonal);
+
+for i = 1: length(SICE_flexibility_low)
+    for j = 1: length(SICE_flexibility_low)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_flexibility_low_zerodiagonal(i,j) = SICE_flexibility_low(i,j);
+        else
+            SICE_flexibility_low_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_flexibility_low = nonzeros(SICE_flexibility_low_zerodiagonal);
+
+for i = 1: length(SICE_speed_high)
+    for j = 1: length(SICE_speed_high)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_speed_high_zerodiagonal(i,j) = SICE_speed_high(i,j);
+        else
+            SICE_speed_high_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_speed_high = nonzeros(SICE_speed_high_zerodiagonal);
+
+for i = 1: length(SICE_speed_low)
+    for j = 1: length(SICE_speed_low)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_speed_low_zerodiagonal(i,j) = SICE_speed_low(i,j);
+        else
+            SICE_speed_low_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_speed_low = nonzeros(SICE_speed_low_zerodiagonal);
+
+for i = 1: length(SICE_cost_high)
+    for j = 1: length(SICE_cost_high)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_cost_high_zerodiagonal(i,j) = SICE_cost_high(i,j);
+        else
+            SICE_cost_high_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_cost_high = nonzeros(SICE_cost_high_zerodiagonal);
+
+for i = 1: length(SICE_cost_low)
+    for j = 1: length(SICE_cost_low)
+        if(i ~= j)  %exclude values on diagonal
+            SICE_cost_low_zerodiagonal(i,j) = SICE_cost_low(i,j);
+        else
+            SICE_cost_low_zerodiagonal(i,j) = 0;
+        end        
+    end
+  end
+nonzeros_cost_low = nonzeros(SICE_cost_low_zerodiagonal);
+
+% to plot histograms for each non-zero column vector and figure out interested range
+figure;
+subplot(1,2,1);
+hist(nonzeros_innovation_high);
+title('Distribution of non-zero values of High-Innovation SICE Outcome');
+subplot(1,2,2);
+hist(nonzeros_innovation_low);
+title('Distribution of non-zero values of Low-Innovation SICE Outcome');
+
+figure;
+subplot(1,2,1);
+hist(nonzeros_quality_high);
+title('Distribution of non-zero values of High-Quality SICE Outcome');
+subplot(1,2,2);
+hist(nonzeros_quality_low);
+title('Distribution of non-zero values of Low-Quality SICE Outcome');
+
+figure;
+subplot(1,2,1);
+hist(nonzeros_flexibility_high);
+title('Distribution of non-zero values of High-Flexibility SICE Outcome');
+subplot(1,2,2);
+hist(nonzeros_flexibility_low);
+title('Distribution of non-zero values of Low-Flexibility SICE Outcome');
+
+figure;
+subplot(1,2,1);
+hist(nonzeros_speed_high);
+title('Distribution of non-zero values of High-Speed SICE Outcome');
+subplot(1,2,2);
+hist(nonzeros_speed_low);
+title('Distribution of non-zero values of Low-Speed SICE Outcome');
+
+figure;
+subplot(1,2,1);
+hist(nonzeros_cost_high);
+title('Distribution of non-zero values of High-Cost SICE Outcome');
+subplot(1,2,2);
+hist(nonzeros_cost_low);
+title('Distribution of non-zero values of Low-Cost SICE Outcome');
+
+% to extract variable pairs' names of SICE outcome >0.1
+k = 1;
+for i = 1: length(SICE_innovation_high)
+    for j =  (i + 1): length(SICE_innovation_high)
+        if(i ~= j)  %exclude values on diagonal
+           if(SICE_innovation_high (i,j) >0.1)
+               arc_innovation_high(k).var1 = data_name_new(i);
+               arc_innovation_high(k).var2 = data_name_new(j);
+               arc_innovation_high(k).value = SICE_innovation_high (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+k = 1;
+for i = 1: length(SICE_innovation_low)
+    for j =  (i + 1): length(SICE_innovation_low)
+        if(i ~= j)  %exclude values on diagonal
+           if(SICE_innovation_low (i,j) >0.1)
+               arc_innovation_low(k).var1 = data_name_new(i);
+               arc_innovation_low(k).var2 = data_name_new(j);
+               arc_innovation_low(k).value = SICE_innovation_low (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+    
 
 % PCA based on individual item level for whole data set
 % % to conduct PCA1-default parameters / method
