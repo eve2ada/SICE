@@ -547,7 +547,7 @@ k = 1;
 for i = 1: length(SICE_innovation_high)
     for j =  (i + 1): length(SICE_innovation_high)
         if(i ~= j)  %exclude values on diagonal
-           if(SICE_innovation_high (i,j) >0.1)
+           if(abs(SICE_innovation_high (i,j)) >0.1)
                arc_innovation_high(k).var1 = data_name_new(i);
                arc_innovation_high(k).var2 = data_name_new(j);
                arc_innovation_high(k).value = SICE_innovation_high (i,j);
@@ -561,7 +561,7 @@ k = 1;
 for i = 1: length(SICE_innovation_low)
     for j =  (i + 1): length(SICE_innovation_low)
         if(i ~= j)  %exclude values on diagonal
-           if(SICE_innovation_low (i,j) >0.1)
+           if(abs(SICE_innovation_low (i,j) )>0.1)
                arc_innovation_low(k).var1 = data_name_new(i);
                arc_innovation_low(k).var2 = data_name_new(j);
                arc_innovation_low(k).value = SICE_innovation_low (i,j);
