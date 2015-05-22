@@ -82,7 +82,7 @@ while(i <= length(data_name_new) && j <= length(data_name_new))
     else
         i = j;
         k = k + 1;
-        subconstruct(k).name = construct_sorted(i).name(1:5);
+        subconstruct(k).name = construct_sorted(i).name(1:4);
         subconstruct(k).value = construct_sorted(i).value;
     end
     j = j + 1;
