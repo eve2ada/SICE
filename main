@@ -601,12 +601,17 @@ cov_pca_speed_low = cov(pca_speed_low);
 cov_pca_cost_high = cov(pca_cost_high);
 cov_pca_cost_low = cov(pca_cost_low);
 
-% to get SICE outcome of 10 subsets
+%*********************************************************
+% Method 1: using BIC/AIC to determine optimized penalty paramters
+% Method 2: to keep arcs at 700, 400, 200 and compare the matrices to see
+% if there are statistical significance
+%*********************************************************
 % to keep arcs at 700.400,200, run IC analysis for lambda varying from 2 to
 % 5 with the interval of 0.01
 lambda = 0 % the penalty parameter
 for i = 100:600
     lambda = i * 0.01;
+    pp(i) = i * 0.01;
     SICE_pca_innovation_high{i}  = sparseInverseCovariance(cov_pca_innovation_high, lambda, []);
     SICE_pca_innovation_high_nz(i) = nnz(SICE_pca_innovation_high{i}); % to get amounts of nonzero values
     
@@ -737,50 +742,85 @@ for i = 100:600
     end
 end
 
-% to plot the histograms of 700-,400-,200-arc IC Matrix (nonzero values)
-% to find nonzero values 
-[row_innovation_high_700,col_innovation_high_700,v_innovation_high_700] = find(SICE_pca_innovation_high_700);
-[row_innovation_low_700,col_innovation_low_700,v_innovation_low_700] = find(SICE_pca_innovation_low_700);
-[row_innovation_high_400,col_innovation_high_400,v_innovation_high_400] = find(SICE_pca_innovation_high_400);
-[row_innovation_low_400,col_innovation_low_400,v_innovation_low_400] = find(SICE_pca_innovation_low_400);
-[row_innovation_high_200,col_innovation_high_200,v_innovation_high_200] = find(SICE_pca_innovation_high_200);
-[row_innovation_low_200,col_innovation_low_200,v_innovation_low_200] = find(SICE_pca_innovation_low_200);
+%to calculate BIC and AIC scores
+% to calculate Multivariate normal negative log-likelihood function
+for i = 101:600
+    temp_matrix = cell2mat(SICE_pca_cost_high(i));
+    temp_cov = cov(temp_matrix);
+    %fullrank(i) = rank(temp_matrix);
+    %cost_high_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), temp_cov);
+    cost_high_pdf= mvnpdf(temp_matrix)
+    cost_high_temp = mvnrobj(temp_matrix, temp_matrix, cost_high_pdf, temp_cov);
+    BIC_cost_high(i) = 2 * cost_high_objective(i) + log(125);
+    AIC_cost_high(i) = 2 * cost_high_objective(i) + 2;
+end
 
-[row_quality_high_700,col_quality_high_700,v_quality_high_700] = find(SICE_pca_quality_high_700);
-[row_quality_low_700,col_quality_low_700,v_quality_low_700] = find(SICE_pca_quality_low_700);
-[row_quality_high_400,col_quality_high_400,v_quality_high_400] = find(SICE_pca_quality_high_400);
-[row_quality_low_400,col_quality_low_400,v_quality_low_400] = find(SICE_pca_quality_low_400);
-[row_quality_high_200,col_quality_high_200,v_quality_high_200] = find(SICE_pca_quality_high_200);
-[row_quality_low_200,col_quality_low_200,v_quality_low_200] = find(SICE_pca_quality_low_200);
+ % to form vector of  lambda
+for i = 1: 500
+     lambda(i) = pp(100 + i);
+end
 
-[row_flexibility_high_700,col_flexibility_high_700,v_flexibility_high_700] = find(SICE_pca_flexibility_high_700);
-[row_flexibility_low_700,col_flexibility_low_700,v_flexibility_low_700] = find(SICE_pca_flexibility_low_700);
-[row_flexibility_high_400,col_flexibility_high_400,v_flexibility_high_400] = find(SICE_pca_flexibility_high_400);
-[row_flexibility_low_400,col_flexibility_low_400,v_flexibility_low_400] = find(SICE_pca_flexibility_low_400);
-[row_flexibility_high_200,col_flexibility_high_200,v_flexibility_high_200] = find(SICE_pca_flexibility_high_200);
-[row_flexibility_low_200,col_flexibility_low_200,v_flexibility_low_200] = find(SICE_pca_flexibility_low_200);
+plot(lambda, BIC_cost_high(101:600));
 
-[row_speed_high_700,col_speed_high_700,v_speed_high_700] = find(SICE_pca_speed_high_700);
-[row_speed_low_700,col_speed_low_700,v_speed_low_700] = find(SICE_pca_speed_low_700);
-[row_speed_high_400,col_speed_high_400,v_speed_high_400] = find(SICE_pca_speed_high_400);
-[row_speed_low_400,col_speed_low_400,v_speed_low_400] = find(SICE_pca_speed_low_400);
-[row_speed_high_200,col_speed_high_200,v_speed_high_200] = find(SICE_pca_speed_high_200);
-[row_speed_low_200,col_speed_low_200,v_speed_low_200] = find(SICE_pca_speed_low_200);
 
-[row_cost_high_700,col_cost_high_700,v_cost_high_700] = find(SICE_pca_cost_high_700);
-[row_cost_low_700,col_cost_low_700,v_cost_low_700] = find(SICE_pca_cost_low_700);
-[row_cost_high_400,col_cost_high_400,v_cost_high_400] = find(SICE_pca_cost_high_400);
-[row_cost_low_400,col_cost_low_400,v_cost_low_400] = find(SICE_pca_cost_low_400);
-[row_cost_high_200,col_cost_high_200,v_cost_high_200] = find(SICE_pca_cost_high_200);
-[row_cost_low_200,col_cost_low_200,v_cost_low_200] = find(SICE_pca_cost_low_200);
-%plot histograms
-figure;
-subplot(1,2,1);
-hist(v_innovation_high_700);
-title('Nonzero values distribution of high-flexibility IC outcome-700 ');
-subplot(1,2,2);
-hist(v_innovation_low_700);
-title('Nonzero values distribution of low-flexibility IC outcome-700');
+% k = 1;
+% for i = 1: length(SICE_pca_innovation_high)
+%     for j =  (i + 1): length(SICE_pca_innovation_high)
+%         if(i ~= j)  %exclude values on diagonal
+%            if(abs(SICE_pca_innovation_high (i,j)) >0.01)
+%                arc_pca_innovation_high(k).var1 = pcadata_name(i,:);
+%                arc_pca_innovation_high(k).var2 = pcadata_name(j,:);
+%                arc_pca_innovation_high(k).value = SICE_pca_innovation_high (i,j);
+%                k = k + 1;
+%             end
+%         end
+%     end
+% 
+% 
+% % to plot the histograms of 700-,400-,200-arc IC Matrix (nonzero values)
+% % to find nonzero values 
+% [row_innovation_high_700,col_innovation_high_700,v_innovation_high_700] = find(SICE_pca_innovation_high_700);
+% [row_innovation_low_700,col_innovation_low_700,v_innovation_low_700] = find(SICE_pca_innovation_low_700);
+% [row_innovation_high_400,col_innovation_high_400,v_innovation_high_400] = find(SICE_pca_innovation_high_400);
+% [row_innovation_low_400,col_innovation_low_400,v_innovation_low_400] = find(SICE_pca_innovation_low_400);
+% [row_innovation_high_200,col_innovation_high_200,v_innovation_high_200] = find(SICE_pca_innovation_high_200);
+% [row_innovation_low_200,col_innovation_low_200,v_innovation_low_200] = find(SICE_pca_innovation_low_200);
+% 
+% [row_quality_high_700,col_quality_high_700,v_quality_high_700] = find(SICE_pca_quality_high_700);
+% [row_quality_low_700,col_quality_low_700,v_quality_low_700] = find(SICE_pca_quality_low_700);
+% [row_quality_high_400,col_quality_high_400,v_quality_high_400] = find(SICE_pca_quality_high_400);
+% [row_quality_low_400,col_quality_low_400,v_quality_low_400] = find(SICE_pca_quality_low_400);
+% [row_quality_high_200,col_quality_high_200,v_quality_high_200] = find(SICE_pca_quality_high_200);
+% [row_quality_low_200,col_quality_low_200,v_quality_low_200] = find(SICE_pca_quality_low_200);
+% 
+% [row_flexibility_high_700,col_flexibility_high_700,v_flexibility_high_700] = find(SICE_pca_flexibility_high_700);
+% [row_flexibility_low_700,col_flexibility_low_700,v_flexibility_low_700] = find(SICE_pca_flexibility_low_700);
+% [row_flexibility_high_400,col_flexibility_high_400,v_flexibility_high_400] = find(SICE_pca_flexibility_high_400);
+% [row_flexibility_low_400,col_flexibility_low_400,v_flexibility_low_400] = find(SICE_pca_flexibility_low_400);
+% [row_flexibility_high_200,col_flexibility_high_200,v_flexibility_high_200] = find(SICE_pca_flexibility_high_200);
+% [row_flexibility_low_200,col_flexibility_low_200,v_flexibility_low_200] = find(SICE_pca_flexibility_low_200);
+% 
+% [row_speed_high_700,col_speed_high_700,v_speed_high_700] = find(SICE_pca_speed_high_700);
+% [row_speed_low_700,col_speed_low_700,v_speed_low_700] = find(SICE_pca_speed_low_700);
+% [row_speed_high_400,col_speed_high_400,v_speed_high_400] = find(SICE_pca_speed_high_400);
+% [row_speed_low_400,col_speed_low_400,v_speed_low_400] = find(SICE_pca_speed_low_400);
+% [row_speed_high_200,col_speed_high_200,v_speed_high_200] = find(SICE_pca_speed_high_200);
+% [row_speed_low_200,col_speed_low_200,v_speed_low_200] = find(SICE_pca_speed_low_200);
+% 
+% [row_cost_high_700,col_cost_high_700,v_cost_high_700] = find(SICE_pca_cost_high_700);
+% [row_cost_low_700,col_cost_low_700,v_cost_low_700] = find(SICE_pca_cost_low_700);
+% [row_cost_high_400,col_cost_high_400,v_cost_high_400] = find(SICE_pca_cost_high_400);
+% [row_cost_low_400,col_cost_low_400,v_cost_low_400] = find(SICE_pca_cost_low_400);
+% [row_cost_high_200,col_cost_high_200,v_cost_high_200] = find(SICE_pca_cost_high_200);
+% [row_cost_low_200,col_cost_low_200,v_cost_low_200] = find(SICE_pca_cost_low_200);
+% %plot histograms
+% figure;
+% subplot(1,2,1);
+% hist(v_innovation_high_700);
+% title('Nonzero values distribution of high-flexibility IC outcome-700 ');
+% subplot(1,2,2);
+% hist(v_innovation_low_700);
+% title('Nonzero values distribution of low-flexibility IC outcome-700');
 
 % IC analysis for specific penalty parameters
 % SICE_pca_innovation_high  = sparseInverseCovariance(cov_pca_innovation_high, 2.197, []);
