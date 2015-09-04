@@ -1,7 +1,8 @@
 clear all;
 close all;
-addpath(genpath(pwd));
+%addpath(genpath(pwd));
 import SLEP.*;
+import nearestSPD.*;
 run mexC.m;
 A = importdata('SAS saved as spss.csv');
 %save IC_SP.mat A;
@@ -602,14 +603,15 @@ cov_pca_cost_high = cov(pca_cost_high);
 cov_pca_cost_low = cov(pca_cost_low);
 
 %*********************************************************
-% Method 1: using BIC/AIC to determine optimized penalty paramters
-% Method 2: to keep arcs at 700, 400, 200 and compare the matrices to see
-% if there are statistical significance
+% Method 1: to keep arcs at 700, 400, 200 and compare the matrices to see
+% if there are statistical significance--at last we chose arc-200 to
+% demonstrate networks and central nodes
+% Method 2: using BIC/AIC to determine optimized penalty paramters
 %*********************************************************
 % to keep arcs at 700.400,200, run IC analysis for lambda varying from 2 to
 % 5 with the interval of 0.01
 lambda = 0 % the penalty parameter
-for i = 100:600
+for i = 101:1000
     lambda = i * 0.01;
     pp(i) = i * 0.01;
     SICE_pca_innovation_high{i}  = sparseInverseCovariance(cov_pca_innovation_high, lambda, []);
@@ -741,27 +743,6 @@ for i = 100:600
         SICE_pca_cost_low_200 = SICE_pca_cost_low{i};
     end
 end
-
-%to calculate BIC and AIC scores
-% to calculate Multivariate normal negative log-likelihood function
-% for i = 101:600
-%     temp_matrix = cell2mat(SICE_pca_cost_high(i));
-%     %temp_cov = cov(temp_matrix);
-%     %fullrank(i) = rank(temp_matrix);
-%     cost_high_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov(temp_matrix));
-%     %cost_high_pdf= mvnpdf(temp_matrix)
-%     %cost_high_temp = mvnrobj(temp_matrix, temp_matrix, cost_high_pdf, temp_cov);
-%     BIC_cost_high(i) = 2 * cost_high_objective(i) + log(125);
-%     AIC_cost_high(i) = 2 * cost_high_objective(i) + 2;
-% end
-
- % to form vector of  lambda
-% for i = 1: 500
-%      lambda(i) = pp(100 + i);
-% end
-
-% plot(lambda, BIC_cost_high(101:600));
-
 
 % k = 1;
 % for i = 1: length(SICE_pca_innovation_high)
@@ -1132,6 +1113,34 @@ for i = 1: length(SICE_pca_speed_low_200)
     end
   end
 end
+
+%to calculate BIC and AIC scores
+% to calculate Multivariate normal negative log-likelihood function
+for i = 101:1000
+    temp_matrix = cell2mat(SICE_pca_cost_high(i));
+    temp_cov = cov(temp_matrix);
+    [~,p] = chol(temp_cov)
+    if p ~= 0 % if the covariance matrix is not positive definite, use nearestSPD to get nearest SPD one
+         Ahat = nearestSPD(temp_cov);
+         cost_high_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), Ahat);
+    else
+        cost_high_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), temp_cov);
+    end
+    %fullrank(i) = rank(temp_matrix);
+    %cost_high_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov(temp_matrix));
+    %cost_high_pdf= mvnpdf(temp_matrix)
+    %cost_high_temp = mvnrobj(temp_matrix, temp_matrix, cost_high_pdf, temp_cov);
+    BIC_cost_high(i) = 2 * cost_high_objective(i) + log(125);
+    AIC_cost_high(i) = 2 * cost_high_objective(i) + 2;
+end
+
+ %to form vector of  lambda
+for i = 1: 900
+     lamb(i) = pp(100 + i);
+end
+
+plot(lamb, BIC_cost_high(101:1000));
+plot(lamb, AIC_cost_high(101:1000));
 
 % PCA based on individual item level for whole data set
 % % to conduct PCA1-default parameters / method
