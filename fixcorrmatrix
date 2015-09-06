@@ -1,0 +1,32 @@
+function Anew = fixcorrmatrix(Abad)
+x0 = zeros(7750,1);
+
+M = zeros(125);
+indices = find(triu(ones(125),1));
+
+opts = optimset('Display','final','maxfunevals',1e10,'TolCon',1e-5,'algorithm','active-set');
+x = fmincon(@(x) objfun(x,Abad,indices,M), x0,[],[],[],[],-Inf,Inf,...
+    @(x) confun(x,Abad,indices,M),opts);
+
+M(indices) = x;
+Anew = Abad + M + M';
+
+function E = objfun(x,Abad,indices,M)
+
+M(indices) = x;
+Anew = Abad + M + M';
+
+% Set your error condition here
+ERR = abs((Anew - Abad)./Abad);
+E = max(ERR(:));
+
+function [c,ceq] = confun(x,Abad,indices,M)
+M(indices) = x;
+Anew = Abad + M + M';
+
+%and the elements that are zero in the inverse covariance matrix produced by SICE should be zero
+ceq = [Anew(Anew == 0)];
+
+% Positive definite
+c = [-min(eig(Anew))];
+
