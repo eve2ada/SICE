@@ -6,6 +6,7 @@ addpath(currentFolder, genpath('D:\Program Files\MATLAB\nearestSPD'));
 import SLEP.*;
 import nearestSPD.*;
 import Spd_Mat.*;
+import fixcorrmatrix.*
 run mexC.m;
 A = importdata('SAS saved as spss.csv');
 %save IC_SP.mat A;
@@ -616,7 +617,7 @@ cov_pca_cost_low = cov(pca_cost_low);
 
 % Method 2: using BIC/AIC to determine optimized penalty paramters 0.1-10
 lamb = 0;
-for i = 1: 100
+for i = 1: 60
     lamb = i * 0.1;
     SICE_pca_innovation_high{i}  = sparseInverseCovariance(cov_pca_innovation_high, lamb, []);
     SICE_pca_innovation_low{i}  = sparseInverseCovariance(cov_pca_innovation_low, lamb, []);
@@ -637,7 +638,7 @@ end
 
 %to calculate BIC and AIC scores
 % to calculate Multivariate normal negative log-likelihood function
-for i = 1:100
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_innovation_high(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -652,7 +653,7 @@ for i = 1:100
 [aic_innovation_high,bic_innovation_high] = aicbic(-innovation_high_objective,1,125);
 end
 
-for i = 1:100
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_innovation_low(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -666,8 +667,8 @@ for i = 1:100
     
     [aic_innovation_low,bic_innovation_low] = aicbic(-innovation_low_objective,1,125);
 end
-%{
-for i = 1:80
+
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_quality_high(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -682,7 +683,7 @@ for i = 1:80
 [aic_quality_high,bic_quality_high] = aicbic(-quality_high_objective,1,125);
 end
 
-for i = 1:80
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_quality_low(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -697,7 +698,7 @@ for i = 1:80
     [aic_quality_low,bic_quality_low] = aicbic(-quality_low_objective,1,125);
 end
 
-for i = 1:80
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_flexibility_high(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -712,7 +713,7 @@ for i = 1:80
 [aic_flexibility_high,bic_flexibility_high] = aicbic(-flexibility_high_objective,1,125);
 end
 
-for i = 1:80
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_flexibility_low(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -727,7 +728,7 @@ for i = 1:80
     [aic_flexibility_low,bic_flexibility_low] = aicbic(-flexibility_low_objective,1,125);
 end
 
-for i = 1:80
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_speed_high(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -742,7 +743,7 @@ for i = 1:80
 [aic_speed_high,bic_speed_high] = aicbic(-speed_high_objective,1,125);
 end
 
-for i = 1:80
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_speed_low(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -757,7 +758,7 @@ for i = 1:80
     [aic_speed_low,bic_speed_low] = aicbic(-speed_low_objective,1,125);
 end
 
-for i = 1:80
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_cost_high(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -776,7 +777,7 @@ for i = 1:80
 [aic_cost_high,bic_cost_high] = aicbic(-cost_high_objective,1,125);
 end
 
-for i = 1:80
+for i = 1:60
     temp_matrix = cell2mat(SICE_pca_cost_low(i));
     temp_cov = cov(temp_matrix);
     [~,p] = chol(temp_cov);
@@ -793,7 +794,7 @@ end
 
 
  %to form vector of  lambda
-for i = 1: 80
+for i = 1: 60
      lambda(i) = i * 0.1;
 end
 
@@ -876,8 +877,6 @@ title('BIC of cost-low ');
 subplot(1,2,2);
 plot(lambda, aic_cost_low);;
 title('AIC of cost-low');
-
-%}
 
 
 
