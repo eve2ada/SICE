@@ -658,7 +658,7 @@ for i = 1:100
    innovation_high_objective(i) = 0.5*sample* log(det(temp_matrix))  - 0.5 * sum_rows;
   %end
 
-[aic_innovation_high,bic_innovation_high] = aicbic(-innovation_high_objective,1,125);
+[aic_innovation_high,bic_innovation_high] = aicbic(innovation_high_objective,1,125);
 end
 
 for i = 1:100
@@ -681,7 +681,7 @@ for i = 1:100
   
    innovation_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows; 
 
-    [aic_innovation_low,bic_innovation_low] = aicbic(-innovation_low_objective,1,125);
+    [aic_innovation_low,bic_innovation_low] = aicbic(innovation_low_objective,1,125);
 end
 
 for i = 1:100
@@ -703,7 +703,7 @@ for i = 1:100
   end
   
    quality_high_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows; 
-[aic_quality_high,bic_quality_high] = aicbic(-quality_high_objective,1,125);
+[aic_quality_high,bic_quality_high] = aicbic(quality_high_objective,1,125);
 end
 
 for i = 1:100
@@ -725,7 +725,7 @@ for i = 1:100
   end
   
    quality_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;   
-    [aic_quality_low,bic_quality_low] = aicbic(-quality_low_objective,1,125);
+    [aic_quality_low,bic_quality_low] = aicbic(quality_low_objective,1,125);
 end
 
 for i = 1:100
@@ -747,7 +747,7 @@ sum_rows = 0;
   end
   
   flexibility_high_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;   
-[aic_flexibility_high,bic_flexibility_high] = aicbic(-flexibility_high_objective,1,125);
+[aic_flexibility_high,bic_flexibility_high] = aicbic(flexibility_high_objective,1,125);
 end
 
 for i = 1:100
@@ -769,7 +769,7 @@ for i = 1:100
   end
   
   flexibility_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;      
-    [aic_flexibility_low,bic_flexibility_low] = aicbic(-flexibility_low_objective,1,125);
+    [aic_flexibility_low,bic_flexibility_low] = aicbic(flexibility_low_objective,1,125);
 end
 
 for i = 1:100
@@ -791,7 +791,7 @@ sum_rows = 0;
   end
   
   speed_high_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;      
-[aic_speed_high,bic_speed_high] = aicbic(-speed_high_objective,1,125);
+[aic_speed_high,bic_speed_high] = aicbic(speed_high_objective,1,125);
 end
 
 for i = 1:100
@@ -813,7 +813,7 @@ for i = 1:100
   end
   
   speed_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;      
-    [aic_speed_low,bic_speed_low] = aicbic(-speed_low_objective,1,125);
+    [aic_speed_low,bic_speed_low] = aicbic(speed_low_objective,1,125);
 end
 
 for i = 1:100
@@ -839,7 +839,7 @@ for i = 1:100
   end
   
   cost_high_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;      
-[aic_cost_high,bic_cost_high] = aicbic(-cost_high_objective,1,125);
+[aic_cost_high,bic_cost_high] = aicbic(cost_high_objective,1,125);
 end
 
 for i = 1:100
@@ -861,7 +861,7 @@ for i = 1:100
   end
   
   cost_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;       
-    [aic_cost_low,bic_cost_low] = aicbic(-cost_low_objective,1,125);
+    [aic_cost_low,bic_cost_low] = aicbic(cost_low_objective,1,125);
 end
 
  %to form vector of  lambda
