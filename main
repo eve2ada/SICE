@@ -638,10 +638,25 @@ end
 
 %to calculate BIC and AIC scores
 % to calculate Multivariate normal negative log-likelihood function
+sample_innovation_high = size(innovation_high,1);
+sample_innovation_low = size(innovation_low,1);
+
+sample_quality_high = size(quality_high,1);
+sample_quality_low = size(quality_low,1);
+
+sample_flexibility_high = size(flexibility_high,1);
+sample_flexibility_low = size(flexibility_low,1);
+
+sample_speed_high = size(speed_high,1);
+sample_speed_low = size(speed_low,1);
+
+sample_cost_high = size(cost_noutlier_high,1);
+sample_cost_low = size(cost_noutlier_low,1);
+
 for i = 1:100
     temp_matrix = SICE_pca_innovation_high{i};
-    temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+    free_param_innovation_high(i) = nnz(temp_matrix); 
+    mean_innovation_high = mean(pca_innovation_high);
     
 %     [~,p] = chol(temp_cov);
 %     if p ~= 0
@@ -651,20 +666,19 @@ for i = 1:100
 %     else
   %     innovation_high_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov_pca_innovation_high);
   sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_innovation_high
+      sum_rows =  sum_rows + (pca_innovation_high(j,:) - mean_innovation_high) * temp_matrix * transpose(pca_innovation_high(j,:) - mean_innovation_high);
   end
   
-   innovation_high_objective(i) = 0.5*sample* log(det(temp_matrix))  - 0.5 * sum_rows;
-  %end
+   innovation_high_objective(i) = 0.5*sample_innovation_high* log(det(temp_matrix))  - 0.5 * sum_rows;
+  end
 
-[aic_innovation_high,bic_innovation_high] = aicbic(innovation_high_objective,1,125);
-end
+[aic_innovation_high,bic_innovation_high] = aicbic(innovation_high_objective,free_param_innovation_high,sample_innovation_high);
 
 for i = 1:100
     temp_matrix = SICE_pca_innovation_low{i};
-    temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+     free_param_innovation_low(i)  = nnz(temp_matrix); 
+     mean_innovation_low = mean(pca_innovation_low);
 %     temp_cov = cov(temp_matrix);
 %     [~,p] = chol(temp_cov);
 %     if p ~= 0
@@ -675,19 +689,18 @@ for i = 1:100
 %       innovation_low_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov_pca_innovation_low);
 %    end
  sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_innovation_low
+      sum_rows =  sum_rows + (pca_innovation_low(j,:) - mean_innovation_low) * temp_matrix * transpose(pca_innovation_low(j,:) - mean_innovation_low);
   end
   
-   innovation_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows; 
-
-    [aic_innovation_low,bic_innovation_low] = aicbic(innovation_low_objective,1,125);
+   innovation_low_objective(i) = 0.5*sample_innovation_low * log(det(temp_matrix))  - 0.5 * sum_rows; 
 end
+    [aic_innovation_low,bic_innovation_low] = aicbic(innovation_low_objective,free_param_innovation_low,sample_innovation_low);
 
 for i = 1:100
     temp_matrix = SICE_pca_quality_high{i};
-    temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+     free_param_quality_high(i) = nnz(temp_matrix); 
+    mean_quality_high = mean(pca_quality_high);
 %     temp_cov = cov(temp_matrix);
 %     [~,p] = chol(temp_cov);
 %     if p ~= 0
@@ -698,18 +711,19 @@ for i = 1:100
  %       quality_high_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov_pca_quality_high);
   %  end
  sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_quality_high
+       sum_rows =  sum_rows + (pca_quality_high(j,:) - mean_quality_high) * temp_matrix * transpose(pca_quality_high(j,:) - mean_quality_high);
   end
   
-   quality_high_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows; 
-[aic_quality_high,bic_quality_high] = aicbic(quality_high_objective,1,125);
+   quality_high_objective(i) = 0.5*sample_quality_high * log(det(temp_matrix))  - 0.5 * sum_rows; 
 end
+[aic_quality_high,bic_quality_high] = aicbic(quality_high_objective,free_param_quality_high,sample_quality_high);
+
 
 for i = 1:100
     temp_matrix = SICE_pca_quality_low{i};
-     temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+      free_param_quality_low(i) = nnz(temp_matrix); 
+     mean_quality_low = mean(pca_quality_low);
 %     temp_cov = cov(temp_matrix);
 %     [~,p] = chol(temp_cov);
 %     if p ~= 0
@@ -720,18 +734,19 @@ for i = 1:100
  %       quality_low_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov_pca_quality_low);
   %  end
   sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_quality_low
+      sum_rows =  sum_rows + (pca_quality_low(j,:) - mean_quality_low) * temp_matrix * transpose(pca_quality_low(j,:) - mean_quality_low);
   end
   
-   quality_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;   
-    [aic_quality_low,bic_quality_low] = aicbic(quality_low_objective,1,125);
-end
+   quality_low_objective(i) = 0.5*sample_quality_low * log(det(temp_matrix))  - 0.5 * sum_rows;   
+   end
+    [aic_quality_low,bic_quality_low] = aicbic(quality_low_objective,free_param_quality_low,sample_quality_low);
+
 
 for i = 1:100
     temp_matrix = SICE_pca_flexibility_high{i};
-     temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+      free_param_flexibility_high(i) =  nnz(temp_matrix); 
+      mean_flexibility_high = mean(pca_flexibility_high);
 %     temp_cov = cov(temp_matrix);
 %     [~,p] = chol(temp_cov);
 %     if p ~= 0
@@ -742,18 +757,18 @@ for i = 1:100
   %      flexibility_high_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov_pca_flexibility_high);
   %  end
 sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_flexibility_high
+     sum_rows =  sum_rows + (pca_flexibility_high(j,:) - mean_flexibility_high) * temp_matrix * transpose(pca_flexibility_high(j,:) - mean_flexibility_high);
   end
   
-  flexibility_high_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;   
-[aic_flexibility_high,bic_flexibility_high] = aicbic(flexibility_high_objective,1,125);
+  flexibility_high_objective(i) = 0.5*sample_flexibility_high * log(det(temp_matrix))  - 0.5 * sum_rows;   
 end
+[aic_flexibility_high,bic_flexibility_high] = aicbic(flexibility_high_objective,free_param_flexibility_high,sample_flexibility_high);
 
 for i = 1:100
     temp_matrix = SICE_pca_flexibility_low{i};
-     temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+     free_param_flexibility_low(i) = nnz(temp_matrix); 
+    mean_flexibility_low = mean(pca_flexibility_low);
 %     temp_cov = cov(temp_matrix);
 %     [~,p] = chol(temp_cov);
 %     if p ~= 0
@@ -764,18 +779,18 @@ for i = 1:100
   %      flexibility_low_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov_pca_flexibility_low);
 %     end
  sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_flexibility_low
+       sum_rows =  sum_rows + (pca_flexibility_low(j,:) - mean_flexibility_low) * temp_matrix * transpose(pca_flexibility_low(j,:) - mean_flexibility_low);
   end
   
-  flexibility_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;      
-    [aic_flexibility_low,bic_flexibility_low] = aicbic(flexibility_low_objective,1,125);
+  flexibility_low_objective(i) = 0.5*sample_flexibility_low * log(det(temp_matrix))  - 0.5 * sum_rows;     
 end
+    [aic_flexibility_low,bic_flexibility_low] = aicbic(flexibility_low_objective,free_param_flexibility_low,sample_flexibility_low);
 
 for i = 1:100
     temp_matrix = SICE_pca_speed_high{i};
-    temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+      free_param_speed_high(i) = nnz(temp_matrix); 
+   mean_speed_high = mean(pca_speed_high);
 %     temp_cov = cov(temp_matrix);
 %     [~,p] = chol(temp_cov);
 %     if p ~= 0
@@ -786,18 +801,18 @@ for i = 1:100
  %       speed_high_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov_pca_speed_high);
 %    end
 sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_speed_high
+       sum_rows =  sum_rows + (pca_speed_high(j,:) - mean_speed_high) * temp_matrix * transpose(pca_speed_high(j,:) - mean_speed_high);
   end
   
-  speed_high_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;      
-[aic_speed_high,bic_speed_high] = aicbic(speed_high_objective,1,125);
+  speed_high_objective(i) = 0.5*sample_speed_high * log(det(temp_matrix))  - 0.5 * sum_rows;     
 end
+[aic_speed_high,bic_speed_high] = aicbic(speed_high_objective,free_param_speed_high,sample_speed_high);
 
 for i = 1:100
     temp_matrix = SICE_pca_speed_low{i};
-    temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+     free_param_speed_low(i) = nnz(temp_matrix); 
+    mean_speed_low = mean(pca_speed_low);
 %     temp_cov = cov(temp_matrix);
 %     [~,p] = chol(temp_cov);
 %     if p ~= 0
@@ -808,18 +823,18 @@ for i = 1:100
   %      speed_low_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov_pca_speed_low);
     %end
     sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_speed_low
+       sum_rows =  sum_rows + (pca_speed_low(j,:) - mean_speed_low) * temp_matrix * transpose(pca_speed_low(j,:) - mean_speed_low);
   end
   
-  speed_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;      
-    [aic_speed_low,bic_speed_low] = aicbic(speed_low_objective,1,125);
+  speed_low_objective(i) = 0.5*sample_speed_low * log(det(temp_matrix))  - 0.5 * sum_rows;    
 end
+    [aic_speed_low,bic_speed_low] = aicbic(speed_low_objective,free_param_speed_low,sample_speed_low);
 
 for i = 1:100
     temp_matrix = SICE_pca_cost_high{i};
-    temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+     free_param_cost_high(i) = nnz(temp_matrix); 
+    mean_cost_high = mean(pca_cost_high);
    % temp_cov = cov(temp_matrix);
    % [~,p] = chol(temp_cov);
     %if p ~= 0
@@ -834,18 +849,18 @@ for i = 1:100
 %     BIC_cost_high(i) = 2 * cost_high_objective(i) + log(125);
 %     AIC_cost_high(i) = 2 * cost_high_objective(i) + 2;
   sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_cost_high
+     sum_rows =  sum_rows + (pca_cost_high(j,:) - mean_cost_high) * temp_matrix * transpose(pca_cost_high(j,:) - mean_cost_high);
   end
   
-  cost_high_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;      
-[aic_cost_high,bic_cost_high] = aicbic(cost_high_objective,1,125);
+  cost_high_objective(i) = 0.5*sample_cost_high * log(det(temp_matrix))  - 0.5 * sum_rows;     
 end
+[aic_cost_high,bic_cost_high] = aicbic(cost_high_objective,free_param_cost_high,sample_cost_high);
 
 for i = 1:100
     temp_matrix = SICE_pca_cost_low{i};
-    temp_mean = mean(temp_matrix);
-    sample = size(temp_matrix,1) ;
+     free_param_cost_low(i) = nnz(temp_matrix); 
+     mean_cost_low = mean(pca_cost_low);
 %     temp_cov = cov(temp_matrix);
 %     [~,p] = chol(temp_cov);
 %     if p ~= 0
@@ -856,12 +871,12 @@ for i = 1:100
  %       cost_low_objective(i) = ecmnobj(temp_matrix, mean(temp_matrix), cov_pca_cost_low);
  %   end
    sum_rows = 0;
-  for j = 1: sample
-      sum_rows =  sum_rows + (temp_matrix(j,:) - temp_mean) * temp_matrix * transpose((temp_matrix(j,:) - temp_mean));
+  for j = 1: sample_cost_low
+      sum_rows =  sum_rows + (pca_cost_low(j,:) - mean_cost_low) * temp_matrix * transpose(pca_cost_low(j,:) - mean_cost_low);
   end
   
-  cost_low_objective(i) = 0.5*sample * log(det(temp_matrix))  - 0.5 * sum_rows;       
-    [aic_cost_low,bic_cost_low] = aicbic(cost_low_objective,1,125);
+  cost_low_objective(i) = 0.5*sample_cost_low * log(det(temp_matrix))  - 0.5 * sum_rows;       
+    [aic_cost_low,bic_cost_low] = aicbic(cost_low_objective,free_param_cost_low,sample_cost_low);
 end
 
  %to form vector of  lambda
