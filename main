@@ -34,6 +34,7 @@ for i = 1:size(data_double, 2)
 end
 
 % to impute missing data using the nearest neighbor method
+%knnimpute() is to find nearest column to impute, but here we want to use nearest row, then transpose first 
 temp = transpose(data_double_new);
 temp_imputed = knnimpute(temp);
 data_imputed = transpose(temp_imputed);
@@ -58,7 +59,7 @@ for i = 1: length(data_name_new)
     construct_us(i). value = data_imputed(:,i);
 end
 
-% to sort the construct by names
+% to sort the construct by names(mainly for form 125 sub-constructs for PCA)
 [unused, order] = sortrows(strvcat(construct(:).name));
 construct_sorted = construct(order); 
 
@@ -79,7 +80,7 @@ j = 2;
 % end
 subconstruct(1).name = construct_sorted(1).name(1:5);
 subconstruct(1).value = construct_sorted(1).value;
-% to group data set into constructs by 4th~7th characters in varable names 
+% to group data set into constructs by 4th~7th characters in variable names 
 while(i <= length(data_name_new) && j <= length(data_name_new))
     if(strncmp(construct_sorted(i).name, construct_sorted(j).name, 4) == 1)
         subconstruct(k).name = construct_sorted(j).name(1:4);
@@ -106,18 +107,19 @@ for i = 1: length(score)
     pcadata(:,i) = score{1,i}(:,1);
 end
 
-%*************************************
-%plot criteron variables to determin cutoff values
-%*************************************
+%*******************************************
+%group high and low sub-groups using criteron variables
+%*******************************************
 % for innovation dimension
-% to find column NRPSN10 and plot histogram(here un-standardized data are used, same to other categories)
+% to find column NRPSN10 and plot histogram
+%(here un-standardized data are used, same to other categories)
 for i = 1: length(construct_us)
     if(construct_us(i).name == 'nrpsn10')
         innovation = construct_us(i).value;
     end
 end
 % to group all records to high and low innovation categories (median, 
-%using standardized data,same to other categories)
+%using unstandardized data,same to other categories)
 % at the same time group pcadata into 10 subsets
 m = 1;
 n = 1;
@@ -128,6 +130,7 @@ for i = 1: length(innovation)
            innovation_high(m,j) = construct(j).value(i);
         end
          % at the same time group pcadata to high-innovation group
+         %group observations to two pcadata groups(responding to high and low performance)
            pca_innovation_high(m,:) = pcadata(i, :);
            m = m + 1;
     else
@@ -260,6 +263,10 @@ for i = 1: length(cost_noutlier)
         n = n + 1;
     end
 end      
+%*******************************************
+%end of group high and low sub-groups using criteron variables
+%*******************************************
+
 
 
 % for i = 1:length(cost)
@@ -587,6 +594,12 @@ end
 %   end
 % end
   
+
+%*********************************************************
+% Method 1: using BIC/AIC to determine optimized penalty paramters
+% Method 2: to keep arcs at 700, 400, 200 and compare the matrices to see
+% if there are statistical significance--at last we chose arc-200 to
+% demonstrate networks and central nodes
 %******************************************************************
 % SICE analysis based on principal components (first PC of each construct)-grouped
 %******************************************************************
@@ -606,16 +619,8 @@ cov_pca_speed_low = cov(pca_speed_low);
 cov_pca_cost_high = cov(pca_cost_high);
 cov_pca_cost_low = cov(pca_cost_low);
 
-%*********************************************************
-% Method 1: to keep arcs at 700, 400, 200 and compare the matrices to see
-% if there are statistical significance--at last we chose arc-200 to
-% demonstrate networks and central nodes
-% Method 2: using BIC/AIC to determine optimized penalty paramters
-%*********************************************************
-% to keep arcs at 700.400,200, run IC analysis for lambda varying from 2 to
-% 5 with the interval of 0.01
 
-% Method 2: using BIC/AIC to determine optimized penalty paramters 0.1-10
+% Method 1: using BIC/AIC to determine optimized penalty paramters 0.1-10
 lamb = 0;
 for i = 1: 100
     lamb = i * 0.1;
@@ -1028,14 +1033,218 @@ subplot(1,2,2);
 plot(lambda, aic_cost_low);;
 title('AIC of cost-low');
 
+% to get strongest connections in each IC matrix according to optimal/adjusted lambda
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_innovation_high{5} (i,j)) >0.05)
+               best_innovation_high(k).var1 = pcadata_name(i,:);
+               best_innovation_high(k).var2 = pcadata_name(j,:);
+               best_innovation_high(k).value = SICE_pca_innovation_high{5} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
 
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_innovation_low{6} (i,j)) >0.05)
+               best_innovation_low(k).var1 = pcadata_name(i,:);
+               best_innovation_low(k).var2 = pcadata_name(j,:);
+               best_innovation_low(k).value = SICE_pca_innovation_low{6} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
 
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_quality_high{5} (i,j)) >0.05)
+               best_quality_high(k).var1 = pcadata_name(i,:);
+               best_quality_high(k).var2 = pcadata_name(j,:);
+               best_quality_high(k).value = SICE_pca_quality_high{5} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
 
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_quality_low{7} (i,j)) >0.05)
+               best_quality_low(k).var1 = pcadata_name(i,:);
+               best_quality_low(k).var2 = pcadata_name(j,:);
+               best_quality_low(k).value = SICE_pca_quality_low{7} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
 
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_flexibility_high{5} (i,j)) >0.05)
+               best_flexibility_high(k).var1 = pcadata_name(i,:);
+               best_flexibility_high(k).var2 = pcadata_name(j,:);
+               best_flexibility_high(k).value = SICE_pca_flexibility_high{5} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
 
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_flexibility_low{7} (i,j)) >0.05)
+               best_flexibility_low(k).var1 = pcadata_name(i,:);
+               best_flexibility_low(k).var2 = pcadata_name(j,:);
+               best_flexibility_low(k).value = SICE_pca_flexibility_low{7} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
 
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_speed_high{5} (i,j)) >0.05)
+               best_speed_high(k).var1 = pcadata_name(i,:);
+               best_speed_high(k).var2 = pcadata_name(j,:);
+               best_speed_high(k).value = SICE_pca_speed_high{5} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
 
-%{
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_speed_low{7} (i,j)) >0.05)
+               best_speed_low(k).var1 = pcadata_name(i,:);
+               best_speed_low(k).var2 = pcadata_name(j,:);
+               best_speed_low(k).value = SICE_pca_speed_low{7} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
+
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_cost_high{6} (i,j)) >0.05)
+               best_cost_high(k).var1 = pcadata_name(i,:);
+               best_cost_high(k).var2 = pcadata_name(j,:);
+               best_cost_high(k).value = SICE_pca_cost_high{6} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
+
+k = 1;
+for i = 1: 125
+    for j =  (i + 1): 125
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_cost_low{6} (i,j)) >0.05)
+               best_cost_low(k).var1 = pcadata_name(i,:);
+               best_cost_low(k).var2 = pcadata_name(j,:);
+               best_cost_low(k).value = SICE_pca_cost_low{6} (i,j);
+               k = k + 1;
+            end
+        end
+    end
+end
+
+% plot the IC matrix
+figure;
+subplot(1,2,1);
+spy(SICE_pca_innovation_high{5});
+title('Optimal IC Matrix of High-innovation');
+subplot(1,2,2);
+spy(SICE_pca_innovation_low{6});
+title('Optimal IC Matrix of Low-innovation');
+
+figure;
+subplot(1,2,1);
+spy(SICE_pca_quality_high{5});
+title('Optimal IC Matrix of High-quality');
+subplot(1,2,2);
+spy(SICE_pca_quality_low{7});
+title('Optimal IC Matrix of Low-quality');
+
+figure;
+subplot(1,2,1);
+spy(SICE_pca_flexibility_high{5});
+title('Optimal IC Matrix of High-flexibility');
+subplot(1,2,2);
+spy(SICE_pca_flexibility_low{7});
+title('Optimal IC Matrix of Low-flexibility');
+
+figure;
+subplot(1,2,1);
+spy(SICE_pca_speed_high{5});
+title('Optimal IC Matrix of High-speed');
+subplot(1,2,2);
+spy(SICE_pca_speed_low{7});
+title('Optimal IC Matrix of Low-speed');
+
+figure;
+subplot(1,2,1);
+spy(SICE_pca_cost_high{6});
+title('Optimal IC Matrix of High-cost');
+subplot(1,2,2);
+spy(SICE_pca_cost_low{6});
+title('Optimal IC Matrix of Low-cost');
+
+% not necessary to figure out the networks in BIC/AIC method 
+% BGobj_best_innovation_high = biograph(SICE_pca_innovation_high{5});
+% BGobj_best_innovation_low = biograph(SICE_pca_innovation_low{6});
+% view(BGobj_best_innovation_high);
+% view(BGobj_best_innovation_low);
+% 
+% BGobj_best_quality_high = biograph(SICE_pca_quality_high{5});
+% BGobj_best_quality_low = biograph(SICE_pca_quality_low{7});
+% view(BGobj_best_quality_high);
+% view(BGobj_best_quality_low);
+% 
+% BGobj_best_flexibility_high = biograph(SICE_pca_flexibility_high{5});
+% BGobj_best_flexibility_low = biograph(SICE_pca_flexibility_low{7});
+% view(BGobj_best_flexibility_high);
+% view(BGobj_best_flexibility_low);
+% 
+% BGobj_best_speed_high = biograph(SICE_pca_speed_high{5});
+% BGobj_best_speed_low = biograph(SICE_pca_speed_low{7});
+% view(BGobj_best_speed_high);
+% view(BGobj_best_speed_low);
+% 
+% BGobj_best_cost_high = biograph(SICE_pca_cost_high{6});
+% BGobj_best_cost_low = biograph(SICE_pca_cost_low{6});
+% view(BGobj_best_cost_high);
+% view(BGobj_best_cost_low);
+
+%****************************************************************
+% Method2: to keep arcs at 700.400,200, run IC analysis for lambda varying from 1 to
+% 10 with the interval of 0.01
+%*****************************************************************
 lambda = 0 % the penalty parameter
 for i = 101:1000
     lambda = i * 0.01;
@@ -1170,22 +1379,10 @@ for i = 101:1000
     end
 end
 
-% k = 1;
-% for i = 1: length(SICE_pca_innovation_high)
-%     for j =  (i + 1): length(SICE_pca_innovation_high)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_innovation_high (i,j)) >0.01)
-%                arc_pca_innovation_high(k).var1 = pcadata_name(i,:);
-%                arc_pca_innovation_high(k).var2 = pcadata_name(j,:);
-%                arc_pca_innovation_high(k).value = SICE_pca_innovation_high (i,j);
-%                k = k + 1;
-%             end
-%         end
-%     end
-% 
-% 
-% to plot the histograms of 700-,400-,200-arc IC Matrix (nonzero values)
-% to find nonzero values 
+
+
+%to plot the histograms of 700-,400-,200-arc IC Matrix (nonzero values)
+%to find nonzero values 
 % [row_innovation_high_700,col_innovation_high_700,v_innovation_high_700] = find(SICE_pca_innovation_high_700);
 % [row_innovation_low_700,col_innovation_low_700,v_innovation_low_700] = find(SICE_pca_innovation_low_700);
 % [row_innovation_high_400,col_innovation_high_400,v_innovation_high_400] = find(SICE_pca_innovation_high_400);
@@ -1281,9 +1478,7 @@ end
 % title('PCA-based IC Matrix of Low-Speed Records');
 % 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% temporarily commented for computation speed
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % figure;
 % subplot(1,2,1);
 % spy(SICE_pca_cost_high_700);
@@ -1299,49 +1494,67 @@ end
 % subplot(1,2,2);
 % spy(SICE_pca_cost_low_400);
 % title('PCA-based IC Matrix of Low-Cost-400 Records');
-% 
-% figure;
-% subplot(1,2,1);
-% spy(SICE_pca_cost_high_200);
-% title('PCA-based IC Matrix of High-Cost-200 Records');
-% subplot(1,2,2);
-% spy(SICE_pca_cost_low_200);
-% title('PCA-based IC Matrix of Low-Cost-200 Records');
-% 
-% BGobj_pca_innovation_high_200 = biograph(SICE_pca_innovation_high_200);
-% BGobj_pca_innovation_low_200 = biograph(SICE_pca_innovation_low_200);
-% BGobj_pca_quality_high_200 = biograph(SICE_pca_quality_high_200);
-% BGobj_pca_quality_low_200 = biograph(SICE_pca_quality_low_200);
-% BGobj_pca_flexibility_high_200 = biograph(SICE_pca_flexibility_high_200);
-% BGobj_pca_flexibility_low_200 = biograph(SICE_pca_flexibility_low_200);
-% BGobj_pca_speed_high_200 = biograph(SICE_pca_speed_high_200);
-% BGobj_pca_speed_low_200 = biograph(SICE_pca_speed_low_200);
-% 
-% BGobj_pca_cost_high_700 = biograph(SICE_pca_cost_high_700);
-% BGobj_pca_cost_low_700 = biograph(SICE_pca_cost_low_700);
-% 
-% BGobj_pca_cost_high_400 = biograph(SICE_pca_cost_high_400);
-% BGobj_pca_cost_low_400 = biograph(SICE_pca_cost_low_400);
-% 
-% BGobj_pca_cost_high_200 = biograph(SICE_pca_cost_high_200);
-% BGobj_pca_cost_low_200 = biograph(SICE_pca_cost_low_200);
-% % 
-% % to view network of SICE outcome-PCA-based,grouped
-% view(BGobj_pca_innovation_high_200);
-% view(BGobj_pca_innovation_low_200);
-% view(BGobj_pca_quality_high_200);
-% view(BGobj_pca_quality_low_200);
-% view(BGobj_pca_flexibility_high_200);
-% view(BGobj_pca_flexibility_low_200);
-% view(BGobj_pca_speed_high_200);
-% view(BGobj_pca_speed_low_200);
-% 
-% view(BGobj_pca_cost_high_700);
-% view(BGobj_pca_cost_low_700);
-% view(BGobj_pca_cost_high_400);
-% view(BGobj_pca_cost_low_400);
-% view(BGobj_pca_cost_high_200);
-% view(BGobj_pca_cost_low_200);
+
+figure;
+subplot(1,2,1);
+spy(SICE_pca_innovation_high_200);
+title('PCA-based IC Matrix of High-Innovation-200 Records');
+subplot(1,2,2);
+spy(SICE_pca_innovation_low_200);
+title('PCA-based IC Matrix of Low-Innovation-200 Records');
+
+figure;
+subplot(1,2,1);
+spy(SICE_pca_quality_high_200);
+title('PCA-based IC Matrix of High-Quality-200 Records');
+subplot(1,2,2);
+spy(SICE_pca_quality_low_200);
+title('PCA-based IC Matrix of Low-Quality-200 Records');
+
+figure;
+subplot(1,2,1);
+spy(SICE_pca_flexibility_high_200);
+title('PCA-based IC Matrix of High-flexibility-200 Records');
+subplot(1,2,2);
+spy(SICE_pca_flexibility_low_200);
+title('PCA-based IC Matrix of Low-flexibility-200 Records');
+
+figure;
+subplot(1,2,1);
+spy(SICE_pca_speed_high_200);
+title('PCA-based IC Matrix of High-Speed-200 Records');
+subplot(1,2,2);
+spy(SICE_pca_speed_low_200);
+title('PCA-based IC Matrix of Low-Speed-200 Records');
+
+figure;
+subplot(1,2,1);
+spy(SICE_pca_cost_high_200);
+title('PCA-based IC Matrix of High-Cost-200 Records');
+subplot(1,2,2);
+spy(SICE_pca_cost_low_200);
+title('PCA-based IC Matrix of Low-Cost-200 Records');
+
+BGobj_pca_innovation_high_200 = biograph(SICE_pca_innovation_high_200);
+BGobj_pca_innovation_low_200 = biograph(SICE_pca_innovation_low_200);
+BGobj_pca_quality_high_200 = biograph(SICE_pca_quality_high_200);
+BGobj_pca_quality_low_200 = biograph(SICE_pca_quality_low_200);
+BGobj_pca_flexibility_high_200 = biograph(SICE_pca_flexibility_high_200);
+BGobj_pca_flexibility_low_200 = biograph(SICE_pca_flexibility_low_200);
+BGobj_pca_speed_high_200 = biograph(SICE_pca_speed_high_200);
+BGobj_pca_speed_low_200 = biograph(SICE_pca_speed_low_200);
+BGobj_pca_cost_high_200 = biograph(SICE_pca_cost_high_200);
+BGobj_pca_cost_low_200 = biograph(SICE_pca_cost_low_200);
+
+% to view network of SICE outcome-PCA-based,grouped
+view(BGobj_pca_innovation_high_200);
+view(BGobj_pca_innovation_low_200);
+view(BGobj_pca_quality_high_200);
+view(BGobj_pca_quality_low_200);
+view(BGobj_pca_flexibility_high_200);
+view(BGobj_pca_flexibility_low_200);
+view(BGobj_pca_speed_high_200);
+view(BGobj_pca_speed_low_200);
 
 % to extract construct pairs' names of SICE outcome-nonzero
 % k = 1;
@@ -1399,150 +1612,150 @@ end
 %     end
 %   end
 % end
-% 
-% k = 1;
-% for i = 1: length(SICE_pca_cost_high_200)
-%     for j =  (i + 1): length(SICE_pca_cost_high_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_cost_high_200 (i,j)) ~=0)
-%                arc_pca_cost_high_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_cost_high_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_cost_high_200(k).value = SICE_pca_cost_high_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
-% 
-% k = 1;
-% for i = 1: length(SICE_pca_cost_low_200)
-%     for j =  (i + 1): length(SICE_pca_cost_low_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_cost_low_200 (i,j)) ~=0)
-%                arc_pca_cost_low_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_cost_low_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_cost_low_200(k).value = SICE_pca_cost_low_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
-% 
-% % to extract construct pairs' names of SICE outcome-Innovation-200
-% k = 1;
-% for i = 1: length(SICE_pca_innovation_high_200)
-%     for j =  (i + 1): length(SICE_pca_innovation_high_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_innovation_high_200 (i,j)) ~=0)
-%                arc_pca_innovation_high_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_innovation_high_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_innovation_high_200(k).value = SICE_pca_innovation_high_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
-% 
-% k = 1;
-% for i = 1: length(SICE_pca_innovation_low_200)
-%     for j =  (i + 1): length(SICE_pca_innovation_low_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_innovation_low_200 (i,j) )~=0)
-%                arc_pca_innovation_low_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_innovation_low_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_innovation_low_200(k).value = SICE_pca_innovation_low_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
-% 
-% % to extract construct pairs' names of SICE outcome-quality-200
-% k = 1;
-% for i = 1: length(SICE_pca_quality_high_200)
-%     for j =  (i + 1): length(SICE_pca_quality_high_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_quality_high_200 (i,j)) ~=0)
-%                arc_pca_quality_high_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_quality_high_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_quality_high_200(k).value = SICE_pca_quality_high_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
-% 
-% k = 1;
-% for i = 1: length(SICE_pca_quality_low_200)
-%     for j =  (i + 1): length(SICE_pca_quality_low_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_quality_low_200 (i,j) )~=0)
-%                arc_pca_quality_low_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_quality_low_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_quality_low_200(k).value = SICE_pca_quality_low_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
-% 
-% % to extract construct pairs' names of SICE outcome-flexibility-200
-% k = 1;
-% for i = 1: length(SICE_pca_flexibility_high_200)
-%     for j =  (i + 1): length(SICE_pca_flexibility_high_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_flexibility_high_200 (i,j)) ~=0)
-%                arc_pca_flexibility_high_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_flexibility_high_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_flexibility_high_200(k).value = SICE_pca_flexibility_high_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
-% 
-% k = 1;
-% for i = 1: length(SICE_pca_flexibility_low_200)
-%     for j =  (i + 1): length(SICE_pca_flexibility_low_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_flexibility_low_200 (i,j) )~=0)
-%                arc_pca_flexibility_low_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_flexibility_low_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_flexibility_low_200(k).value = SICE_pca_flexibility_low_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
-% 
-% % to extract construct pairs' names of SICE outcome-speed-200
-% k = 1;
-% for i = 1: length(SICE_pca_speed_high_200)
-%     for j =  (i + 1): length(SICE_pca_speed_high_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_speed_high_200 (i,j)) ~=0)
-%                arc_pca_speed_high_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_speed_high_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_speed_high_200(k).value = SICE_pca_speed_high_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
-% 
-% k = 1;
-% for i = 1: length(SICE_pca_speed_low_200)
-%     for j =  (i + 1): length(SICE_pca_speed_low_200)
-%         if(i ~= j)  %exclude values on diagonal
-%            if(abs(SICE_pca_speed_low_200 (i,j) )~=0)
-%                arc_pca_speed_low_200(k).var1 = pcadata_name(i,:);
-%                arc_pca_speed_low_200(k).var2 = pcadata_name(j,:);
-%                arc_pca_speed_low_200(k).value = SICE_pca_speed_low_200 (i,j);
-%                k = k + 1;
-%         end
-%     end
-%   end
-% end
+
+k = 1;
+for i = 1: length(SICE_pca_cost_high_200)
+    for j =  (i + 1): length(SICE_pca_cost_high_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_cost_high_200 (i,j)) ~=0)
+               arc_pca_cost_high_200(k).var1 = pcadata_name(i,:);
+               arc_pca_cost_high_200(k).var2 = pcadata_name(j,:);
+               arc_pca_cost_high_200(k).value = SICE_pca_cost_high_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+k = 1;
+for i = 1: length(SICE_pca_cost_low_200)
+    for j =  (i + 1): length(SICE_pca_cost_low_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_cost_low_200 (i,j)) ~=0)
+               arc_pca_cost_low_200(k).var1 = pcadata_name(i,:);
+               arc_pca_cost_low_200(k).var2 = pcadata_name(j,:);
+               arc_pca_cost_low_200(k).value = SICE_pca_cost_low_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+% to extract construct pairs' names of SICE outcome-Innovation-200
+k = 1;
+for i = 1: length(SICE_pca_innovation_high_200)
+    for j =  (i + 1): length(SICE_pca_innovation_high_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_innovation_high_200 (i,j)) ~=0)
+               arc_pca_innovation_high_200(k).var1 = pcadata_name(i,:);
+               arc_pca_innovation_high_200(k).var2 = pcadata_name(j,:);
+               arc_pca_innovation_high_200(k).value = SICE_pca_innovation_high_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+k = 1;
+for i = 1: length(SICE_pca_innovation_low_200)
+    for j =  (i + 1): length(SICE_pca_innovation_low_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_innovation_low_200 (i,j) )~=0)
+               arc_pca_innovation_low_200(k).var1 = pcadata_name(i,:);
+               arc_pca_innovation_low_200(k).var2 = pcadata_name(j,:);
+               arc_pca_innovation_low_200(k).value = SICE_pca_innovation_low_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+% to extract construct pairs' names of SICE outcome-quality-200
+k = 1;
+for i = 1: length(SICE_pca_quality_high_200)
+    for j =  (i + 1): length(SICE_pca_quality_high_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_quality_high_200 (i,j)) ~=0)
+               arc_pca_quality_high_200(k).var1 = pcadata_name(i,:);
+               arc_pca_quality_high_200(k).var2 = pcadata_name(j,:);
+               arc_pca_quality_high_200(k).value = SICE_pca_quality_high_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+k = 1;
+for i = 1: length(SICE_pca_quality_low_200)
+    for j =  (i + 1): length(SICE_pca_quality_low_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_quality_low_200 (i,j) )~=0)
+               arc_pca_quality_low_200(k).var1 = pcadata_name(i,:);
+               arc_pca_quality_low_200(k).var2 = pcadata_name(j,:);
+               arc_pca_quality_low_200(k).value = SICE_pca_quality_low_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+% to extract construct pairs' names of SICE outcome-flexibility-200
+k = 1;
+for i = 1: length(SICE_pca_flexibility_high_200)
+    for j =  (i + 1): length(SICE_pca_flexibility_high_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_flexibility_high_200 (i,j)) ~=0)
+               arc_pca_flexibility_high_200(k).var1 = pcadata_name(i,:);
+               arc_pca_flexibility_high_200(k).var2 = pcadata_name(j,:);
+               arc_pca_flexibility_high_200(k).value = SICE_pca_flexibility_high_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+k = 1;
+for i = 1: length(SICE_pca_flexibility_low_200)
+    for j =  (i + 1): length(SICE_pca_flexibility_low_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_flexibility_low_200 (i,j) )~=0)
+               arc_pca_flexibility_low_200(k).var1 = pcadata_name(i,:);
+               arc_pca_flexibility_low_200(k).var2 = pcadata_name(j,:);
+               arc_pca_flexibility_low_200(k).value = SICE_pca_flexibility_low_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+% to extract construct pairs' names of SICE outcome-speed-200
+k = 1;
+for i = 1: length(SICE_pca_speed_high_200)
+    for j =  (i + 1): length(SICE_pca_speed_high_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_speed_high_200 (i,j)) ~=0)
+               arc_pca_speed_high_200(k).var1 = pcadata_name(i,:);
+               arc_pca_speed_high_200(k).var2 = pcadata_name(j,:);
+               arc_pca_speed_high_200(k).value = SICE_pca_speed_high_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
+
+k = 1;
+for i = 1: length(SICE_pca_speed_low_200)
+    for j =  (i + 1): length(SICE_pca_speed_low_200)
+        if(i ~= j)  %exclude values on diagonal
+           if(abs(SICE_pca_speed_low_200 (i,j) )~=0)
+               arc_pca_speed_low_200(k).var1 = pcadata_name(i,:);
+               arc_pca_speed_low_200(k).var2 = pcadata_name(j,:);
+               arc_pca_speed_low_200(k).value = SICE_pca_speed_low_200 (i,j);
+               k = k + 1;
+        end
+    end
+  end
+end
 
 
 % PCA based on individual item level for whole data set
